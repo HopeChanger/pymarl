@@ -1,4 +1,4 @@
-from multiagentenv import MultiAgentEnv
+from .multiagentenv import MultiAgentEnv
 import numpy as np
 import random
 from PIL import Image, ImageDraw
@@ -96,18 +96,23 @@ class PursuitEnv(MultiAgentEnv):
 
     def get_obs(self):
         """ Returns all agent observations in a list """
-        raise NotImplementedError
+        obs = np.concatenate((self.agents_pos, self.target_pos), axis=0).reshape(-1)
+        obs_list = []
+        for i in range(self.n_agents):
+            obs_list.append(obs)
+        return obs_list
 
     def get_obs_size(self):
         """ Returns the shape of the observation """
-        raise NotImplementedError
+        return 2 * (self.n_agents + 1)
 
     def get_state(self):
-        raise NotImplementedError
+        state = np.concatenate((self.agents_pos, self.target_pos), axis=0).reshape(-1)
+        return state
 
     def get_state_size(self):
         """ Returns the shape of the state"""
-        raise NotImplementedError
+        return 2 * (self.n_agents + 1)
 
     def get_avail_actions(self):
         return np.ones((self.n_agents, self.action_num))
@@ -173,12 +178,12 @@ class PursuitEnv(MultiAgentEnv):
 
 
 if __name__ == "__main__":
-    # a = np.random.randn(2)
-    # b = np.random.randn(4, 2)
-    # print(a)
-    # print(b)
-    # c = a + b
-    # print(c)
+    """
+    when run this code, change
+    from .multiagentenv import MultiAgentEnv
+    to
+    from multiagentenv import MultiAgentEnv
+    """
     test = PursuitEnv()
     test.reset()
     for i in range(100):
