@@ -67,11 +67,11 @@ class EpisodeRunner:
             actions = self.mac.select_actions(self.batch, t_ep=self.t, t_env=self.t_env, test_mode=test_mode)
 
             reward, terminated, env_info = self.env.step(actions[0])
-            episode_return += reward
+            episode_return += env_info["team_reward"]
 
             post_transition_data = {
                 "actions": actions,
-                "reward": [(reward,)],
+                "reward": [(1 - self.args.tau) * np.array(reward) + self.args.tau * env_info["team_reward"]],
                 "terminated": [(terminated != env_info.get("episode_limit", False),)],
             }
 
@@ -93,9 +93,10 @@ class EpisodeRunner:
         cur_stats = self.test_stats if test_mode else self.train_stats
         cur_returns = self.test_returns if test_mode else self.train_returns
         log_prefix = "test_" if test_mode else ""
-        cur_stats.update({k: cur_stats.get(k, 0) + env_info.get(k, 0) for k in set(cur_stats) | set(env_info)})
+        # cur_stats.update({k: cur_stats.get(k, 0) + env_info.get(k, 0) for k in set(cur_stats) | set(env_info)})
         cur_stats["n_episodes"] = 1 + cur_stats.get("n_episodes", 0)
         cur_stats["ep_length"] = self.t + cur_stats.get("ep_length", 0)
+        cur_stats["ep_rew_mean"] = episode_return / self.t + cur_stats.get("ep_rew_mean", 0)
 
         if not test_mode:
             self.t_env += self.t

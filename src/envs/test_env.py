@@ -54,15 +54,18 @@ class PursuitEnv(MultiAgentEnv):
         """ Returns reward, terminated, info """
         reward_map = [-0.1, -1, -1, 10]
         done = False
-        info = {}
+        info = {"reward": [0] * self.n_agents,
+                "team_reward": 0}
         self.count_steps += 1
 
         reward = [0] * self.n_agents
+        team_reward = 0
         for i in range(self.n_agents):
             crash, self.agents_pos[i, :] = self._try_step(self.agents_pos[i, :], actions[i])
             reward[i] = reward_map[crash]
             if crash == 3:
                 done = True
+                team_reward = reward_map[3]
         
         if not done:
             self._target_step(mode="random")
@@ -76,6 +79,7 @@ class PursuitEnv(MultiAgentEnv):
             if count >= self.catch_threshold:
                 done = True
                 reward = [reward_map[3]] * self.n_agents
+                team_reward = reward_map[3]
         
         if self.save_pic_step > 0 and self.count_steps % self.save_pic_step == 0:
             self.render(save_path=os.path.join(Path(__file__).parents[2], "render", self.save_folder), file_name="{:04d}.png".format(self.count_steps))
@@ -85,6 +89,9 @@ class PursuitEnv(MultiAgentEnv):
         
         if done:
             self.record_eps += 1
+        
+        info["reward"] = reward
+        info["team_reward"] = team_reward
 
         return reward, done, info
 
@@ -96,7 +103,7 @@ class PursuitEnv(MultiAgentEnv):
 
     def get_obs(self):
         """ Returns all agent observations in a list """
-        obs = np.concatenate((self.agents_pos, self.target_pos), axis=0).reshape(-1)
+        obs = np.concatenate((self.agents_pos, [self.target_pos]), axis=0).reshape(-1)
         obs_list = []
         for i in range(self.n_agents):
             obs_list.append(obs)
@@ -107,7 +114,7 @@ class PursuitEnv(MultiAgentEnv):
         return 2 * (self.n_agents + 1)
 
     def get_state(self):
-        state = np.concatenate((self.agents_pos, self.target_pos), axis=0).reshape(-1)
+        state = np.concatenate((self.agents_pos, [self.target_pos]), axis=0).reshape(-1)
         return state
 
     def get_state_size(self):
