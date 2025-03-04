@@ -16,7 +16,7 @@ class PursuitEnv(MultiAgentEnv):
         
         self.count_steps = 0
         self.record_eps = 0
-        self.save_pic_step = 10
+        self.save_render = True
         self.save_folder = ""
 
         # init position
@@ -81,7 +81,7 @@ class PursuitEnv(MultiAgentEnv):
                 reward = [reward_map[3]] * self.n_agents
                 team_reward = reward_map[3]
         
-        if self.save_pic_step > 0 and self.count_steps % self.save_pic_step == 0:
+        if self.save_render and self.record_eps % 10000 == 0:
             self.render(save_path=os.path.join(Path(__file__).parents[2], "render", self.save_folder), file_name="{:04d}.png".format(self.count_steps))
         
         if self.count_steps >= self.episode_limit:
@@ -132,9 +132,9 @@ class PursuitEnv(MultiAgentEnv):
         self.count_steps = 0
         self._random_position()
 
-        self.save_folder = "record_{:05d}".format(self.record_eps)
+        self.save_folder = "record_{:07d}".format(self.record_eps)
 
-        if self.save_pic_step > 0 and self.count_steps % self.save_pic_step == 0:
+        if self.save_render and self.record_eps % 10000 == 0:
             self.render(save_path=os.path.join(Path(__file__).parents[2], "render", self.save_folder), file_name="{:04d}.png".format(self.count_steps))
 
     def render(self, save_path="", file_name="render.png"):
