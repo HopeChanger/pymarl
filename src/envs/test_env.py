@@ -1,9 +1,10 @@
-from .multiagentenv import MultiAgentEnv
+from multiagentenv import MultiAgentEnv
 import numpy as np
 import random
 from PIL import Image, ImageDraw
 import os
 from pathlib import Path
+from PIL import ImageFont
 
 
 class PursuitEnv(MultiAgentEnv):
@@ -68,7 +69,7 @@ class PursuitEnv(MultiAgentEnv):
                 team_reward = reward_map[3]
         
         if not done:
-            self._target_step(mode="random")
+            self._target_step(mode="random_escape")
 
             round_area = self.target_pos + np.array([[-1, 0], [1, 0], [0, -1], [0, 1]], dtype=np.int8)
             round_area = [tuple(pos) for pos in round_area]
@@ -98,6 +99,36 @@ class PursuitEnv(MultiAgentEnv):
     def _target_step(self, mode="random"):
         if mode == "random":
             _, self.target_pos = self._try_step(self.target_pos, np.random.randint(0, 5))
+        elif mode == "escape": # may stay in corner
+            action = 4
+            relate_dis = self.agents_pos - self.target_pos 
+            near_id = np.argmin(np.sum(np.abs(relate_dis), axis=1))
+            if abs(relate_dis[near_id][0]) > abs(relate_dis[near_id][1]) and relate_dis[near_id][0] > 0:
+                action = 0
+            elif abs(relate_dis[near_id][0]) > abs(relate_dis[near_id][1]) and relate_dis[near_id][0] <= 0:
+                action = 1
+            elif abs(relate_dis[near_id][0]) <= abs(relate_dis[near_id][1]) and relate_dis[near_id][1] > 0:
+                action = 2
+            else:
+                action = 3
+            _, self.target_pos = self._try_step(self.target_pos, action)
+        elif mode == "random_escape":
+            action = 4
+            relate_dis = self.agents_pos - self.target_pos 
+            chess_dis = np.sum(np.abs(relate_dis), axis=1)
+            if np.min(chess_dis) >= 4:
+                action = np.random.randint(0, 5)
+            else:
+                near_id = np.argmin(chess_dis)
+                if abs(relate_dis[near_id][0]) > abs(relate_dis[near_id][1]) and relate_dis[near_id][0] > 0:
+                    action = 0
+                elif abs(relate_dis[near_id][0]) > abs(relate_dis[near_id][1]) and relate_dis[near_id][0] <= 0:
+                    action = 1
+                elif abs(relate_dis[near_id][0]) <= abs(relate_dis[near_id][1]) and relate_dis[near_id][1] > 0:
+                    action = 2
+                else:
+                    action = 3
+            _, self.target_pos = self._try_step(self.target_pos, action)
         else:
             raise ValueError("ERROR Value of mode.")
 
@@ -147,6 +178,7 @@ class PursuitEnv(MultiAgentEnv):
         img_height = cell_height * map_h + 2 * offset
 
         color = ["#D99694", "#C3D69B"]
+        font = ImageFont.truetype("msyh.ttc", 18)
         image = Image.new('RGB', (img_width, img_height), 'white')
         draw = ImageDraw.Draw(image)
 
@@ -155,17 +187,23 @@ class PursuitEnv(MultiAgentEnv):
         for i in range(map_w + 1):
             draw.line((i * cell_width + offset, offset, i * cell_width + offset, img_height - offset), fill='black')
 
-        def draw_circle(pos, c):
+        def draw_circle(pos, c, text=None):
             left_up = (offset + cell_width * (pos[1] + 0.5) - radius,
                     offset + cell_height * (pos[0] + 0.5) - radius)
             right_down = (offset + cell_width * (pos[1] + 0.5) + radius,
                         offset + cell_height * (pos[0] + 0.5) + radius)
             draw.ellipse([left_up, right_down], fill=c)
+            if text:
+                bbox = draw.textbbox((0, 0), text, font=font)
+                text_width = bbox[2] - bbox[0]
+                text_height = bbox[3] - bbox[1]
+                draw.text(((left_up[0] + right_down[0] - text_width) / 2, (left_up[1] + right_down[1] - text_height) / 2), 
+                          text, fill='black', font=font)
+
+        draw_circle(self.target_pos, color[1])
 
         for i in range(self.n_agents):
-            draw_circle(self.agents_pos[i], color[0])
-        
-        draw_circle(self.target_pos, color[1])
+            draw_circle(self.agents_pos[i], color[0], str(i + 1))
 
         # image.show()
         if save_path:
