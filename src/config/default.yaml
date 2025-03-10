@@ -3,8 +3,8 @@
 # --- pymarl options ---
 runner: "episode" # Runs 1 env for an episode
 mac: "basic_mac" # Basic controller
-env: "test_env" # Environment name
-env_args: {} # Arguments for the environment
+env: "unrealcv_env" # Environment name
+env_args: {env_id: "UnrealMTMC18-DiscreteColorGoal-v3"} # Arguments for the environment
 batch_size_run: 1 # Number of environments to run in parallel
 test_nepisode: 20 # Number of episodes to test for
 test_interval: 2000 # Test after {} timesteps have passed

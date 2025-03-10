@@ -12,6 +12,11 @@ class BasicMAC:
         self._build_agents(input_shape)
         self.agent_output_type = args.agent_output_type
 
+        if self.args.agent == "cnn":
+            self.use_hidden = False
+        else:
+            self.use_hidden = True
+
         self.action_selector = action_REGISTRY[args.action_selector](args)
 
         self.hidden_states = None
@@ -26,7 +31,10 @@ class BasicMAC:
     def forward(self, ep_batch, t, test_mode=False):
         agent_inputs = self._build_inputs(ep_batch, t)
         avail_actions = ep_batch["avail_actions"][:, t]
-        agent_outs, self.hidden_states = self.agent(agent_inputs, self.hidden_states)
+        if self.use_hidden:
+            agent_outs, self.hidden_states = self.agent(agent_inputs, self.hidden_states)
+        else:
+            agent_outs = self.agent(agent_inputs)
 
         # Softmax the agent outputs if they're policy logits
         if self.agent_output_type == "pi_logits":
@@ -54,7 +62,8 @@ class BasicMAC:
         return agent_outs.view(ep_batch.batch_size, self.n_agents, -1)
 
     def init_hidden(self, batch_size):
-        self.hidden_states = self.agent.init_hidden().unsqueeze(0).expand(batch_size, self.n_agents, -1)  # bav
+        if self.use_hidden:
+            self.hidden_states = self.agent.init_hidden().unsqueeze(0).expand(batch_size, self.n_agents, -1)  # bav
 
     def parameters(self):
         return self.agent.parameters()
