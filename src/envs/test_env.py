@@ -1,4 +1,4 @@
-from multiagentenv import MultiAgentEnv
+from .multiagentenv import MultiAgentEnv
 import numpy as np
 import random
 from PIL import Image, ImageDraw
@@ -17,7 +17,7 @@ class PursuitEnv(MultiAgentEnv):
         
         self.count_steps = 0
         self.record_eps = 0
-        self.save_render = True
+        self.save_render = False
         self.save_folder = ""
 
         # init position
@@ -55,8 +55,8 @@ class PursuitEnv(MultiAgentEnv):
         """ Returns reward, terminated, info """
         reward_map = [-0.1, -1, -1, 10]
         done = False
-        info = {"reward": [0] * self.n_agents,
-                "team_reward": 0}
+        info = {"Reward": [0] * self.n_agents,
+                "Team_Reward": 0}
         self.count_steps += 1
 
         reward = [0] * self.n_agents
@@ -91,10 +91,10 @@ class PursuitEnv(MultiAgentEnv):
         if done:
             self.record_eps += 1
         
-        info["reward"] = reward
-        info["team_reward"] = team_reward
+        info["Reward"] = reward
+        info["Team_Reward"] = team_reward
 
-        return reward, done, info
+        return None, reward, done, info
 
     def _target_step(self, mode="random"):
         if mode == "random":

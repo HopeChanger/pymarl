@@ -55,7 +55,7 @@ class EpisodeRunner:
         while not terminated:
 
             pre_transition_data = {
-                "state": [self.env.get_state()],
+                # "state": [self.env.get_state()],
                 "avail_actions": [self.env.get_avail_actions()],
                 "obs": [self.env.get_obs()]
             }
@@ -66,12 +66,12 @@ class EpisodeRunner:
             # Receive the actions for each agent at this timestep in a batch of size 1
             actions = self.mac.select_actions(self.batch, t_ep=self.t, t_env=self.t_env, test_mode=test_mode)
 
-            reward, terminated, env_info = self.env.step(actions[0])
-            episode_return += env_info["team_reward"]
+            _, reward, terminated, env_info = self.env.step(actions[0])
+            episode_return += env_info["Team_Reward"]
 
             post_transition_data = {
                 "actions": actions,
-                "reward": [(1 - self.args.tau) * np.array(reward) + self.args.tau * env_info["team_reward"]],
+                "reward": [(1 - self.args.tau) * np.array(reward) + self.args.tau * env_info["Team_Reward"]],
                 "terminated": [(terminated != env_info.get("episode_limit", False),)],
             }
 
@@ -80,7 +80,7 @@ class EpisodeRunner:
             self.t += 1
 
         last_data = {
-            "state": [self.env.get_state()],
+            # "state": [self.env.get_state()],
             "avail_actions": [self.env.get_avail_actions()],
             "obs": [self.env.get_obs()]
         }

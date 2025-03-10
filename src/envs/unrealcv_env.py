@@ -1,4 +1,4 @@
-from multiagentenv import MultiAgentEnv
+from .multiagentenv import MultiAgentEnv
 import os
 
 import gym

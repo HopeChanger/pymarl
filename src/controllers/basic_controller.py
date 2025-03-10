@@ -8,7 +8,9 @@ class BasicMAC:
     def __init__(self, scheme, groups, args):
         self.n_agents = args.n_agents
         self.args = args
+        self.obs_shape = None
         input_shape = self._get_input_shape(scheme)
+        print("input shape: ", input_shape)
         self._build_agents(input_shape)
         self.agent_output_type = args.agent_output_type
 
@@ -97,11 +99,19 @@ class BasicMAC:
         if self.args.obs_agent_id:
             inputs.append(th.eye(self.n_agents, device=batch.device).unsqueeze(0).expand(bs, -1, -1))
 
-        inputs = th.cat([x.reshape(bs*self.n_agents, -1) for x in inputs], dim=1)
+        if self.args.agent == "cnn":
+            inputs = th.cat([x.reshape(bs*self.n_agents, self.obs_shape[0], self.obs_shape[1], self.obs_shape[2]) for x in inputs], dim=1)
+        else:
+            inputs = th.cat([x.reshape(bs*self.n_agents, -1) for x in inputs], dim=1)
+
         return inputs
 
     def _get_input_shape(self, scheme):
-        input_shape = scheme["obs"]["vshape"]
+        self.obs_shape = scheme["obs"]["vshape"]
+        if self.args.agent == "cnn":
+            input_shape = scheme["obs"]["vshape"][0]
+        else:
+            input_shape = scheme["obs"]["vshape"]
         if self.args.obs_last_action:
             input_shape += scheme["actions_onehot"]["vshape"][0]
         if self.args.obs_agent_id:

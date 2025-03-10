@@ -82,11 +82,11 @@ def run_sequential(args, logger):
     env_info = runner.get_env_info()
     args.n_agents = env_info["n_agents"]
     args.n_actions = env_info["n_actions"]
-    args.state_shape = env_info["state_shape"]
+    # args.state_shape = env_info["state_shape"]
 
     # Default/Base scheme
     scheme = {
-        "state": {"vshape": env_info["state_shape"]},
+        # "state": {"vshape": env_info["state_shape"]},
         "obs": {"vshape": env_info["obs_shape"], "group": "agents"},
         "actions": {"vshape": (1,), "group": "agents", "dtype": th.long},
         "avail_actions": {"vshape": (env_info["n_actions"],), "group": "agents", "dtype": th.int},
@@ -182,8 +182,13 @@ def run_sequential(args, logger):
         n_test_runs = max(1, args.test_nepisode // runner.batch_size)
         if (runner.t_env - last_test_T) / args.test_interval >= 1.0:
 
-            logger.console_logger.info("t_env: {} / {}".format(runner.t_env, args.t_max))
-            logger.console_logger.info("Estimated time left: {}. Time passed: {}".format(
+            # logger.console_logger.info("t_env: {} / {}".format(runner.t_env, args.t_max))
+            # logger.console_logger.info("Estimated time left: {}. Time passed: {}".format(
+            #     time_left(last_time, last_test_T, runner.t_env, args.t_max), time_str(time.time() - start_time)))
+            # last_time = time.time()
+
+            print("t_env: {} / {}".format(runner.t_env, args.t_max))
+            print("Estimated time left: {}. Time passed: {}".format(
                 time_left(last_time, last_test_T, runner.t_env, args.t_max), time_str(time.time() - start_time)))
             last_time = time.time()
 
@@ -196,7 +201,8 @@ def run_sequential(args, logger):
             save_path = os.path.join(args.local_results_path, "models", args.unique_token, str(runner.t_env))
             #"results/models/{}".format(unique_token)
             os.makedirs(save_path, exist_ok=True)
-            logger.console_logger.info("Saving models to {}".format(save_path))
+            # logger.console_logger.info("Saving models to {}".format(save_path))
+            print("Saving models to {}".format(save_path))
 
             # learner should handle saving/loading -- delegate actor save/load to mac,
             # use appropriate filenames to do critics, optimizer states
