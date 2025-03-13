@@ -42,10 +42,15 @@ def test():
     arg = SimpleNamespace()
     arg.rnn_hidden_dim = 128
     arg.n_actions = 9
-    net = CNNAgent(input_channel=3, args=arg)
+    model = CNNAgent(input_channel=3, args=arg)
     state = torch.rand(1, 3, 640, 480)
-    out = net.forward(state)
+    out = model.forward(state)
     print(out.shape)
+
+    total_params = sum(p.numel() for p in model.parameters())
+    size_bytes = total_params * 4
+    size_mb = size_bytes / (1024 ** 2)
+    print(f"参数总数: {total_params}, 占用空间: {size_mb:.2f} MB")
 
 
 if __name__ == "__main__":
