@@ -14,7 +14,7 @@ class BasicMAC:
         self._build_agents(input_shape)
         self.agent_output_type = args.agent_output_type
 
-        if self.args.agent == "cnn":
+        if self.args.agent in ["cnn", "resnet"]:
             self.use_hidden = False
         else:
             self.use_hidden = True

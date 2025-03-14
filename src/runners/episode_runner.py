@@ -54,10 +54,16 @@ class EpisodeRunner:
 
         while not terminated:
 
+            if self.args.agent in ["resnet"]:
+                raw_pic, add_info = self.env.get_obs()
+                new_obs = self.mac.agent.get_mlp_input(raw_pic, add_info)
+            else:
+                new_obs = self.env.get_obs()
+
             pre_transition_data = {
                 # "state": [self.env.get_state()],
                 "avail_actions": [self.env.get_avail_actions()],
-                "obs": [self.env.get_obs()]
+                "obs": [new_obs]
             }
 
             self.batch.update(pre_transition_data, ts=self.t)
@@ -79,10 +85,16 @@ class EpisodeRunner:
 
             self.t += 1
 
+        if self.args.agent in ["resnet"]:
+            raw_pic, add_info = self.env.get_obs()
+            new_obs = self.mac.agent.get_mlp_input(raw_pic, add_info)
+        else:
+            new_obs = self.env.get_obs()
+
         last_data = {
             # "state": [self.env.get_state()],
             "avail_actions": [self.env.get_avail_actions()],
-            "obs": [self.env.get_obs()]
+            "obs": [new_obs]
         }
         self.batch.update(last_data, ts=self.t)
 
