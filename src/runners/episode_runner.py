@@ -50,6 +50,7 @@ class EpisodeRunner:
 
         terminated = False
         episode_return = 0
+        episode_reward = None
         self.mac.init_hidden(batch_size=self.batch_size)
 
         while not terminated:
@@ -68,6 +69,11 @@ class EpisodeRunner:
 
             _, reward, terminated, env_info = self.env.step(actions[0])
             episode_return += env_info["Team_Reward"]
+            reward = np.array(reward)
+            if episode_reward is None:
+                episode_reward = reward
+            else:
+                episode_reward += reward
 
             post_transition_data = {
                 "actions": actions,
@@ -97,6 +103,8 @@ class EpisodeRunner:
         cur_stats["n_episodes"] = 1 + cur_stats.get("n_episodes", 0)
         cur_stats["ep_length"] = self.t + cur_stats.get("ep_length", 0)
         cur_stats["ep_rew_mean"] = episode_return / self.t + cur_stats.get("ep_rew_mean", 0)
+        for agent_i, item in enumerate(episode_reward):
+            cur_stats["ep_rew_{:01d}".format(agent_i)] = item / self.t + cur_stats.get("ep_rew_{:01d}".format(agent_i), 0)
 
         if not test_mode:
             self.t_env += self.t

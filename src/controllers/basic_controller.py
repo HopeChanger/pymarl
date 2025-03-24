@@ -8,16 +8,10 @@ class BasicMAC:
     def __init__(self, scheme, groups, args):
         self.n_agents = args.n_agents
         self.args = args
-        self.obs_shape = None
         input_shape = self._get_input_shape(scheme)
         print("input shape: ", input_shape)
         self._build_agents(input_shape)
         self.agent_output_type = args.agent_output_type
-
-        if self.args.agent == "cnn":
-            self.use_hidden = False
-        else:
-            self.use_hidden = True
 
         self.action_selector = action_REGISTRY[args.action_selector](args)
 
@@ -33,10 +27,7 @@ class BasicMAC:
     def forward(self, ep_batch, t, test_mode=False):
         agent_inputs = self._build_inputs(ep_batch, t)
         avail_actions = ep_batch["avail_actions"][:, t]
-        if self.use_hidden:
-            agent_outs, self.hidden_states = self.agent(agent_inputs, self.hidden_states)
-        else:
-            agent_outs = self.agent(agent_inputs)
+        agent_outs, self.hidden_states = self.agent(agent_inputs, self.hidden_states)
 
         # Softmax the agent outputs if they're policy logits
         if self.agent_output_type == "pi_logits":
@@ -64,8 +55,7 @@ class BasicMAC:
         return agent_outs.view(ep_batch.batch_size, self.n_agents, -1)
 
     def init_hidden(self, batch_size):
-        if self.use_hidden:
-            self.hidden_states = self.agent.init_hidden().unsqueeze(0).expand(batch_size, self.n_agents, -1)  # bav
+        self.hidden_states = self.agent.init_hidden().unsqueeze(0).expand(batch_size, self.n_agents, -1)  # bav
 
     def parameters(self):
         return self.agent.parameters()
@@ -99,19 +89,12 @@ class BasicMAC:
         if self.args.obs_agent_id:
             inputs.append(th.eye(self.n_agents, device=batch.device).unsqueeze(0).expand(bs, -1, -1))
 
-        if self.args.agent == "cnn":
-            inputs = th.cat([x.reshape(bs*self.n_agents, self.obs_shape[0], self.obs_shape[1], self.obs_shape[2]) for x in inputs], dim=1)
-        else:
-            inputs = th.cat([x.reshape(bs*self.n_agents, -1) for x in inputs], dim=1)
+        inputs = th.cat([x.reshape(bs*self.n_agents, -1) for x in inputs], dim=1)
 
         return inputs
 
     def _get_input_shape(self, scheme):
-        self.obs_shape = scheme["obs"]["vshape"]
-        if self.args.agent == "cnn":
-            input_shape = scheme["obs"]["vshape"][0]
-        else:
-            input_shape = scheme["obs"]["vshape"]
+        input_shape = scheme["obs"]["vshape"]
         if self.args.obs_last_action:
             input_shape += scheme["actions_onehot"]["vshape"][0]
         if self.args.obs_agent_id:

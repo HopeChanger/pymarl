@@ -2,3 +2,4 @@ tb_logs/
 results/
 render/
 **/__pycache__/
+tmp/

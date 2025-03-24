@@ -4,15 +4,15 @@
 runner: "episode" # Runs 1 env for an episode
 mac: "basic_mac" # Basic controller
 env: "unrealcv_env" # Environment name
-env_args: {env_id: "UnrealMTMC18v4-DiscreteColorGoal-v0"} # Arguments for the environment
+env_args: {env_id: "UnrealMTMC18v5-DiscreteColorGoal-v0"} # Arguments for the environment
 batch_size_run: 1 # Number of environments to run in parallel
-test_nepisode: 8 # Number of episodes to test for
-test_interval: 200 # Test after {} timesteps have passed
+test_nepisode: 1 # Number of episodes to test for
+test_interval: 1000 # Test after {} timesteps have passed
 test_greedy: True # Use greedy evaluation (if False, will set epsilon floor to 0
-log_interval: 200 # Log summary of stats after every {} timesteps
-runner_log_interval: 200 # Log runner stats (not test stats) every {} timesteps
-learner_log_interval: 200 # Log training stats every {} timesteps
-t_max: 20000 # Stop running after this many timesteps
+log_interval: 1000 # Log summary of stats after every {} timesteps
+runner_log_interval: 1000 # Log runner stats (not test stats) every {} timesteps
+learner_log_interval: 1000 # Log training stats every {} timesteps
+t_max: 200000 # Stop running after this many timesteps
 use_cuda: True # Use gpu by default unless it isn't available
 buffer_cpu_only: True # If true we won't keep all of the replay buffer in vram
 
@@ -37,7 +37,7 @@ optim_eps: 0.00001 # RMSProp epsilon
 grad_norm_clip: 10 # Reduce magnitude of gradients above this L2 norm
 
 # --- Agent parameters ---
-agent: "cnn" # Default rnn agent
+agent: "rnn" # Default rnn agent
 rnn_hidden_dim: 64 # Size of hidden state for default rnn agent
 obs_agent_id: False # Include the agent's one_hot id in the observation
 obs_last_action: False # Include the agent's last action (one_hot) in the observation
