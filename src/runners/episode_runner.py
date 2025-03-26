@@ -49,8 +49,9 @@ class EpisodeRunner:
         self.reset()
 
         terminated = False
-        episode_return = 0
+        episode_coverage = 0
         episode_reward = None
+        episode_return = 0
         self.mac.init_hidden(batch_size=self.batch_size)
 
         while not terminated:
@@ -66,14 +67,16 @@ class EpisodeRunner:
             # Pass the entire batch of experiences up till now to the agents
             # Receive the actions for each agent at this timestep in a batch of size 1
             actions = self.mac.select_actions(self.batch, t_ep=self.t, t_env=self.t_env, test_mode=test_mode)
+            # actions = [[4, 4, 4, 4, 4, 4]]
 
             _, reward, terminated, env_info = self.env.step(actions[0])
-            episode_return += env_info["Team_Reward"]
+            episode_coverage += env_info["Team_Reward"]
             reward = np.array(reward)
             if episode_reward is None:
                 episode_reward = reward
             else:
                 episode_reward += reward
+            episode_return += np.mean(reward)
 
             post_transition_data = {
                 "actions": actions,
@@ -102,18 +105,18 @@ class EpisodeRunner:
         # cur_stats.update({k: cur_stats.get(k, 0) + env_info.get(k, 0) for k in set(cur_stats) | set(env_info)})
         cur_stats["n_episodes"] = 1 + cur_stats.get("n_episodes", 0)
         cur_stats["ep_length"] = self.t + cur_stats.get("ep_length", 0)
-        cur_stats["ep_rew_mean"] = episode_return / self.t + cur_stats.get("ep_rew_mean", 0)
+        cur_stats["ep_rew_mean"] = episode_coverage / self.t + cur_stats.get("ep_rew_mean", 0)
         for agent_i, item in enumerate(episode_reward):
             cur_stats["ep_rew_{:01d}".format(agent_i)] = item / self.t + cur_stats.get("ep_rew_{:01d}".format(agent_i), 0)
 
         if not test_mode:
             self.t_env += self.t
 
-        cur_returns.append(episode_return)
+        cur_returns.append(episode_return / self.t)
 
         if test_mode and (len(self.test_returns) == self.args.test_nepisode):
             self._log(cur_returns, cur_stats, log_prefix)
-        elif self.t_env - self.log_train_stats_t >= self.args.runner_log_interval:
+        elif (not test_mode) and self.t_env - self.log_train_stats_t >= self.args.runner_log_interval:
             self._log(cur_returns, cur_stats, log_prefix)
             if hasattr(self.mac.action_selector, "epsilon"):
                 self.logger.log_stat("epsilon", self.mac.action_selector.epsilon, self.t_env)

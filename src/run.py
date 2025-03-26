@@ -8,6 +8,7 @@ from types import SimpleNamespace as SN
 from utils.logging import Logger
 from utils.timehelper import time_left, time_str
 from os.path import dirname, abspath
+import numpy as np
 
 from learners import REGISTRY as le_REGISTRY
 from runners import REGISTRY as r_REGISTRY
@@ -65,11 +66,17 @@ def run(_run, _config, _log):
 
 def evaluate_sequential(args, runner):
 
-    for _ in range(args.test_nepisode):
+    assert args.eval_nepisode < args.test_nepisode
+    for i in range(args.eval_nepisode):
+        print("Test Episode: {:02d}".format(i))
         runner.run(test_mode=True)
+    
+    print(runner.test_returns)
+    print("mean: ", np.mean(runner.test_returns))
+    print("std: ", np.std(runner.test_returns))
 
-    if args.save_replay:
-        runner.save_replay()
+    # if args.save_replay:
+    #     runner.save_replay()
 
     runner.close_env()
 
@@ -141,7 +148,8 @@ def run_sequential(args, logger):
 
         model_path = os.path.join(args.checkpoint_path, str(timestep_to_load))
 
-        logger.console_logger.info("Loading model from {}".format(model_path))
+        # logger.console_logger.info("Loading model from {}".format(model_path))
+        print("Loading model from {}".format(model_path))
         learner.load_models(model_path)
         runner.t_env = timestep_to_load
 
